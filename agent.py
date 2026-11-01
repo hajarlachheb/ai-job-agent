@@ -120,3 +120,44 @@ def evaluate(job_id:str,x_agent_key:str|None=Header(None)):
  except (ValueError,RuntimeError) as e:raise HTTPException(422,str(e))
  except requests.RequestException as e:raise HTTPException(502,'LLM service unavailable: '+str(e))
  finally:c.close()
+
+
+@app.post('/pipeline/run')
+def pipeline_run(x_agent_key:str|None=Header(None)):
+ """Discover then evaluate a bounded number of fresh jobs; never submit."""
+ auth(x_agent_key)
+ discovery=run_discovery()
+ c=conn()
+ try:
+  # Cost guard: at most 12 LLM assessments per UTC day, across all runs.
+  today=dt.datetime.now(dt.timezone.utc).date().isoformat()
+  used=c.execute("SELECT COUNT(*) FROM events WHERE event='evaluation_started' AND at LIKE ?",(today+'%',)).fetchone()[0]
+  remaining=max(0,12-used)
+  limit=min(3,remaining)
+  selected=c.execute("SELECT * FROM jobs WHERE status='discovered' AND score>=? ORDER BY score DESC, discovered_at ASC LIMIT ?",(CONFIG.get('min_score',80),limit)).fetchall()
+  results=[]
+  for job in selected:
+   jid=job['id']
+   # Claim before API calls to prevent retries from duplicating LLM expense.
+   changed=c.execute("UPDATE jobs SET status='evaluating',updated_at=? WHERE id=? AND status='discovered'",(now(),jid)).rowcount
+   if not changed:continue
+   log(c,jid,'evaluation_started')
+   c.commit()
+   try:
+    profile=load_profile()
+    analysis=assess(dict(job),profile,CONFIG)
+    status,reason=eligibility_gate(dict(job),analysis,CONFIG)
+    output=BASE/'drafts'/f'{jid}.pdf'
+    make_pdf(dict(job),profile,analysis,output)
+    c.execute('UPDATE jobs SET score=?,status=?,reason=?,updated_at=? WHERE id=?',(analysis['score'],status,reason,now(),jid))
+    log(c,jid,'llm_evaluation',json.dumps({'score':analysis['score'],'gate':reason,'pdf':str(output)}))
+    c.commit()
+    results.append({'id':jid,'status':status,'score':analysis['score']})
+   except Exception as exc:
+    # Failure is held for manual review, not automatically retried or submitted.
+    c.execute("UPDATE jobs SET status='review',reason=?,updated_at=? WHERE id=?",('Evaluation failed; inspect logs and credentials',now(),jid))
+    log(c,jid,'evaluation_failed',type(exc).__name__)
+    c.commit()
+    results.append({'id':jid,'status':'review','error':type(exc).__name__})
+  return {'discovery':discovery,'evaluations':results,'remaining_today':max(0,remaining-len(results)),'submitted':0}
+ finally:c.close()
