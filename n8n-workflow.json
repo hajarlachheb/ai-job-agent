@@ -1,5 +1,5 @@
 {
-  "name": "Job Agent - Discover every 6 hours",
+  "name": "Job Agent - Discover and Evaluate (bounded)",
   "nodes": [
     {
       "parameters": {
@@ -24,7 +24,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://agent:8000/discover",
+        "url": "http://agent:8000/pipeline/run",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -37,7 +37,7 @@
         "options": {}
       },
       "id": "discover",
-      "name": "Discover jobs",
+      "name": "Discover and evaluate",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -51,7 +51,7 @@
       "main": [
         [
           {
-            "node": "Discover jobs",
+            "node": "Discover and evaluate",
             "type": "main",
             "index": 0
           }
