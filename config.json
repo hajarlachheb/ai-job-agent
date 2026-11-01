@@ -1,0 +1,40 @@
+{
+  "target_titles": [
+    "AI Engineer",
+    "Machine Learning Engineer",
+    "ML Engineer",
+    "Applied Scientist",
+    "Research Engineer",
+    "AI Researcher"
+  ],
+  "skills": [
+    "Python",
+    "PyTorch",
+    "LLM",
+    "RAG",
+    "LangChain",
+    "LangGraph",
+    "machine learning"
+  ],
+  "locations": [
+    "Toronto",
+    "Canada",
+    "Remote",
+    "Barcelona",
+    "Europe",
+    "United States"
+  ],
+  "exclusion_phrases": [
+    "security clearance required",
+    "must be a us citizen"
+  ],
+  "min_score": 80,
+  "daily_submission_cap": 15,
+  "auto_submit": false,
+  "sources": {
+    "greenhouse": [
+      "openai"
+    ],
+    "lever": []
+  }
+}
