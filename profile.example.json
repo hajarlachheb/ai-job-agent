@@ -1,0 +1,23 @@
+{
+  "name": "Your Name",
+  "email": "",
+  "location": "Your location",
+  "linkedin": "",
+  "summary": "Replace with verified professional summary",
+  "skills": [
+    "Python",
+    "SQL",
+    "PyTorch",
+    "Machine Learning",
+    "LLM",
+    "RAG",
+    "LangChain",
+    "LangGraph",
+    "n8n",
+    "BigQuery",
+    "Azure",
+    "scikit-learn"
+  ],
+  "verified_experience": [],
+  "education": []
+}
