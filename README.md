@@ -74,3 +74,19 @@ pytest -q
 - LinkedIn/Indeed support only via permitted workflows
 
 See [PHASE2.md](PHASE2.md) for details and limits.
+
+## Scheduled AI evaluation (Phase 3 foundation)
+
+The `POST /pipeline/run` endpoint performs discovery and evaluates at most **3 new high-scoring jobs per trigger**, with a persistent **12 LLM assessments per UTC day** cap. A failed evaluation moves into review and will not automatically retry. It does not submit any application.
+
+After `git pull` and `docker compose up --build -d`, test it manually:
+
+```powershell
+$headers = @{ "x-agent-key" = "YOUR_SECRET" }
+Invoke-RestMethod -Method Post -Uri http://localhost:8000/pipeline/run -Headers $headers
+Invoke-RestMethod -Uri http://localhost:8000/stats -Headers $headers
+```
+
+**n8n networking:** The imported workflow points to `http://agent:8000`, which works **only when n8n runs on the same Docker network as the agent**. If n8n is in another Docker Compose project on Windows with Docker Desktop, change the HTTP node URL to `http://host.docker.internal:8000/pipeline/run`, and ensure the API is reachable from that container (the default API is loopback-bound, so you may need an explicit shared Docker network instead). If n8n runs directly on the host, use `http://localhost:8000/pipeline/run`. The n8n variable `AGENT_API_KEY` must be set in n8n's environment.
+
+Open the n8n workflow, test a manual execution, inspect the result, and only then activate the schedule. Keep your computer, Docker Desktop and n8n running. The daily LLM assessment cap limits calls, **not monetary spending**, which depends on model and token usage. Set an API billing limit separately. This workflow does not import your CV automatically: populate `profile.json` with your verified experience first.
