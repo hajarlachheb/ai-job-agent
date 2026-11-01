@@ -1,0 +1,16 @@
+services:
+  agent:
+    build: .
+    restart: unless-stopped
+    environment:
+      AGENT_API_KEY: ${AGENT_API_KEY}
+      DB_PATH: /data/jobs.sqlite3
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - agent_data:/data
+      - ./drafts:/app/drafts
+volumes:
+  agent_data:
